@@ -1,5 +1,5 @@
 import random
-import re
+import re 
 
 def evaluate(eq):
     result, dice = roll(eq)
