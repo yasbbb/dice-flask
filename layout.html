@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Flask Dice Roller</title>
+    <script src="/static/scripts/jquery.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/style/style.css" />
+</head>
+<body>
+    <h1 class="headline">Dice Roller</h1>
+    
+    <div class="flexcontainer">
+        <form id="rollform" target="/roll" method="POST">
+            <div class="formgroup">
+                <label for="eq">Equation</label>
+                <input class="eqinput" type="text" placeholder="type equation here..." id="eq"/>
+            </div>
+    
+            <button id="eqformsubmit" type="submit">ROLL</button>
+        </form>
+    </div>
+
+    <div class="flexcontainer">
+        <div class="resbox" id="resbox">
+            <h4 id="reshead">Enter a valid equation:</h4>
+            <h1 id="result" style="font-size: 50px"></h1>
+            <div id="dice"></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="histbox" id="histbox">
+            <h3 class="headline sm">History</h3>
+            <hr>
+            <ul id="histlist"></ul>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            console.log("document ready");
+
+            $("#rollform").submit(function(event){
+                event.preventDefault();
+                eq = $("#eq").val();
+
+                if(eq === ""){
+                    $("#reshead").html("Please Enter an Equation:");
+                    $("#reshead").css("color", "red");
+                    return null;
+                }
+
+                data = {
+                    equation: eq
+                };
+
+                $.ajax({
+                    url: "/roll",
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(res){
+                        $("#result").html(res.result);
+                        $("#reshead").css("color", "black");
+                        $("#reshead").html("Your roll of " + res.equation + " is:");
+                        $("#histlist").append("<li>" + res.equation + " | " + res.result.toString() + "</li>")
+                        $("#histlist").scrollTop($("#histlist")[0].scrollHeight);
+                        $("#dice").empty();
+                        let dice = res.dice;
+                        // console.log(dice);
+                        if(dice){
+                            let diceCount = Object.keys(dice)
+                                .map(key => dice[key].length)
+                                .reduce((agg, len) => agg + len, 0);
+                            // console.log(diceCount);
+                            if(diceCount > 20){
+                                return;
+                            }
+                            for(var key of Object.keys(dice)){
+                                // console.log(key);
+                                let htmlBlock = $("<div>");
+                                htmlBlock.html(`${key}: ${dice[key]}`);
+                                $("#dice").append(htmlBlock);
+                            }
+                        }
+                    },
+                    error: function(xhr, err, status){
+                        console.log(xhr, err, status);
+                    }
+
+                })
+            });
+        });
+    </script>
+</body>
+</html>
